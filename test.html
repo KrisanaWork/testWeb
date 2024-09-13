@@ -1,0 +1,3614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Mapping</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"
+        integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+
+    <!-- JQuery UI -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+
+    <!-- Import style.css -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Leaflet Minimap -->
+    <link rel="stylesheet" href="./src/Control.MiniMap.css">
+    <script src="src/Control.MiniMap.js"></script>
+
+    <!-- Leaflet MouseCoordinate -->
+    <link rel="stylesheet" href="src/Leaflet.Coordinates-0.1.5.css">
+    <link rel="stylesheet" href="src/Leaflet.Coordinates-0.1.5.ie.css">
+    <script src="src/Leaflet.Coordinates-0.1.5.min.js"></script>
+    <script src="src/Leaflet.Coordinates-0.1.5.src.js"></script>
+
+    <!-- Leaflet Slide Menu -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+    <link rel="stylesheet" href="src/L.Control.SlideMenu.css">
+    <script src="src/L.Control.SlideMenu.js"></script>
+
+    <!-- Leaflet Locatecontrol -->
+    <link rel="stylesheet" href="src/L.Control.Locate.min.css">
+    <script src="src/L.Control.Locate.min.js"></script>
+
+</head>
+
+<body style="padding-top: 56px;">
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="test.html"><img src="../img/uhi.png" height="30"
+                            class="d-inline-block align-top" alt="" />ระบบติดตามการเปลี่ยนแปลงเกาะความร้อนเมือง</a>
+                    <div class="collapse navbar-collapse" id="collapsibleNavId">
+                        <ul class="navbar-nav me-auto mt-2 mt-lg-0">
+                            <li class="nav-item">
+                                <a class="nav-link" href="./html/about.html" aria-current="page">เกี่ยวกับเรา</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">ติดต่อเรา</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <div class="row">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script>
+        var timeSteps = [
+            "2024-01-01T00:00:00Z",
+            "2024-02-01T00:00:00Z",
+            "2024-03-01T00:00:00Z",
+            "2024-04-01T00:00:00Z",
+            "2024-05-01T00:00:00Z",
+            "2024-06-01T00:00:00Z"
+        ];
+
+        var map = L.map('map', {
+            zoom: 13,
+            center: [16.439625, 102.828728]
+        })
+
+        var osm = L.tileLayer('https://api.maptiler.com/maps/openstreetmap/{z}/{x}/{y}.jpg?key=ykfzd0G1vmNNGi9yIbVG', {
+            attribution: "\u003Ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003E&copy; MapTiler\u003C/a\u003E \u003Ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003E&copy; OpenStreetMap contributors\u003C/a\u003E"
+        });
+
+        var satellite = L.tileLayer('https://api.maptiler.com/maps/satellite/{z}/{x}/{y}.jpg?key=ykfzd0G1vmNNGi9yIbVG', {
+            attribution: "\u003Ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003E&copy; MapTiler\u003C/a\u003E \u003Ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003E&copy; OpenStreetMap contributors\u003C/a\u003E"
+        });
+
+        osm.addTo(map)
+
+        var baseMaps = {
+            "OpenStreetMap": osm,
+            "Satellite": satellite
+        };
+
+        var layerControl = L.control.layers(baseMaps).addTo(map);
+
+        var osmMini = new L.TileLayer('https://api.maptiler.com/maps/openstreetmap/{z}/{x}/{y}.jpg?key=ykfzd0G1vmNNGi9yIbVG', { minZoom: 0, maxZoom: 13, attribution: "\u003Ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003E&copy; MapTiler\u003C/a\u003E \u003Ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003E&copy; OpenStreetMap contributors\u003C/a\u003E" });
+
+        var miniMap = new L.Control.MiniMap(osmMini, {
+            toggleDisplay: false,
+            width: 200,
+            height: 200
+        }).addTo(map);
+
+        var locateControl = L.control.locate().addTo(map);
+
+        var wmsUrl = 'http://localhost:8888/geoserver/wms'
+
+        /* contents */
+        var left = '<div class="header">Filter Data</div>';
+        var contents = `
+            <div class="content">
+                <form>
+                    <label class="title">กรองข้อมูลที่ต้องการแสดง</label>
+                    <br><br>
+                    <label>เลือกข้อมูล</label>
+                    <br>
+                    <select id="datas1">
+                        <option selected disabled class="selected" id="pre1">Select a data</option>
+                        <option value="landUse">การใช้ที่ดิน</option>
+                        <option value="lst">อุณหภูมิพื้นผิว</option>
+                        <option value="uhi">ความเข้มข้นของเกาะความร้อน</option>
+                        <option value="utfvi">ความแปรปรวนของสนามความร้อน</option>
+                    </select>
+                    <br><br>
+                    <label>เลือกปี (ค.ศ.)</label>
+                    <br>
+                    <select id="years1">
+                        <option selected disabled class="selected" id="pre2">Select a year</option>
+                        <option value="2014">2014</option>
+                        <option value="2015">2015</option>
+                        <option value="2016">2016</option>
+                        <option value="2017">2017</option>
+                        <option value="2018">2018</option>
+                        <option value="2019">2019</option>
+                        <option value="2020">2020</option>
+                        <option value="2021">2021</option>
+                        <option value="2022">2022</option>
+                        <option value="2023">2023</option>
+                    </select>
+                    <br><br>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="change">
+                        <label class="form-check-label" for="change">ตรวจสอบการเปลี่ยนแปลง</label>
+                    </div>
+
+                </form>
+            </div>
+            <br>
+            <footer>
+                <button type="button" class="btn btn-success" id="confirm">Confirm</button>
+                <button type="button" class="btn btn-danger" id="clear">Clear</button>
+            </footer>
+            `;
+
+        var slideMenu = L.control
+            .slideMenu("", {
+                position: "topleft",
+                menuposition: "topleft",
+                icon: "fa-solid fa-filter"
+            })
+            .addTo(map);
+        slideMenu.setContents(left + contents);
+
+        L.control.coordinates({
+            position: "bottomleft",
+            decimals: 2,
+            decimalSeperator: ".",
+            labelTemplateLat: "Latitude: {y}",
+            labelTemplateLng: "Longitude: {x}"
+        }).addTo(map);
+
+        $("#datas1").on('change', function () {
+            $("#pre1").remove()
+        })
+        $("#years1").on('change', function () {
+            $("#pre2").remove()
+        })
+        $("#change").on('click', function () {
+            if ($(this).is(":checked")) {
+                let data2 = $("#datas1 :selected").text()
+                let valData2 = $("#datas1").val()
+                let year2 = $("#years1 :selected").text()
+                let valYear2 = $("#years1").val()
+                $("form").append(`
+                <div id="addContent">
+                <br>
+                <label>ข้อมูลที่นำมาตรวจสอบ</label>
+                <br>
+                <select id="datas2">
+                    <option selected disabled id="pre3" value="${valData2}">${data2}</option>
+                </select>
+                <br><br>
+                <label>ปีที่นำมาตรวจสอบ (ค.ศ.)</label>
+                <br>
+                <div id="years2">
+                    <div class="form-check form-check-inline" id="y14">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2014">
+                        <label class="form-check-label">2014</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y15">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2015">
+                        <label class="form-check-label">2015</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y16">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2016">
+                        <label class="form-check-label">2016</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y17">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2017">
+                        <label class="form-check-label">2017</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y18">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2018">
+                        <label class="form-check-label">2018</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y19">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2019">
+                        <label class="form-check-label">2019</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y20">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2020">
+                        <label class="form-check-label">2020</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y21">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2021">
+                        <label class="form-check-label">2021</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y22">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2022">
+                        <label class="form-check-label">2022</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y23">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2023">
+                        <label class="form-check-label">2023</label>
+                    </div>
+                </div>
+                </div>
+                `)
+                if (valYear2 === "2014") {
+                    $("#y14").remove()
+                } else if (valYear2 === "2015") {
+                    $("#y15").remove()
+                } else if (valYear2 === "2016") {
+                    $("#y16").remove()
+                } else if (valYear2 === "2017") {
+                    $("#y17").remove()
+                } else if (valYear2 === "2018") {
+                    $("#y18").remove()
+                } else if (valYear2 === "2019") {
+                    $("#y19").remove()
+                } else if (valYear2 === "2020") {
+                    $("#y20").remove()
+                } else if (valYear2 === "2021") {
+                    $("#y21").remove()
+                } else if (valYear2 === "2022") {
+                    $("#y21").remove()
+                } else if (valYear2 === "2023") {
+                    $("#y21").remove()
+                }
+            } else {
+                $("#addContent").remove()
+            }
+        })
+
+        $("#datas1").on('change', function () {
+            let data2 = $("#datas1 :selected").text()
+            let valData2 = $("#datas1").val()
+            $("#pre3").html(`<option selected disabled id="pre3" value="${valData2}">${data2}</option>`)
+        })
+
+        $("#years1").on('change', function () {
+            let year2 = $("#years1 :selected").text()
+            let valYear2 = $("#years1").val()
+            if (valYear2 === "2014") {
+                $("#years2").html(`
+                    <div class="form-check form-check-inline" id="y15">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2015">
+                        <label class="form-check-label">2015</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y16">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2016">
+                        <label class="form-check-label">2016</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y17">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2017">
+                        <label class="form-check-label">2017</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y18">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2018">
+                        <label class="form-check-label">2018</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y19">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2019">
+                        <label class="form-check-label">2019</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y20">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2020">
+                        <label class="form-check-label">2020</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y21">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2021">
+                        <label class="form-check-label">2021</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y22">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2022">
+                        <label class="form-check-label">2022</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y23">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2023">
+                        <label class="form-check-label">2023</label>
+                    </div>
+                `)
+            } else if (valYear2 === "2015") {
+                $("#years2").html(`
+                    <div class="form-check form-check-inline" id="y14">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2014">
+                        <label class="form-check-label">2014</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y16">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2016">
+                        <label class="form-check-label">2016</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y17">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2017">
+                        <label class="form-check-label">2017</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y18">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2018">
+                        <label class="form-check-label">2018</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y19">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2019">
+                        <label class="form-check-label">2019</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y20">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2020">
+                        <label class="form-check-label">2020</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y21">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2021">
+                        <label class="form-check-label">2021</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y22">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2022">
+                        <label class="form-check-label">2022</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y23">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2023">
+                        <label class="form-check-label">2023</label>
+                    </div>
+                `)
+            } else if (valYear2 === "2016") {
+                $("#years2").html(`
+                    <div class="form-check form-check-inline" id="y14">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2014">
+                        <label class="form-check-label">2014</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y15">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2015">
+                        <label class="form-check-label">2015</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y17">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2017">
+                        <label class="form-check-label">2017</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y18">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2018">
+                        <label class="form-check-label">2018</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y19">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2019">
+                        <label class="form-check-label">2019</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y20">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2020">
+                        <label class="form-check-label">2020</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y21">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2021">
+                        <label class="form-check-label">2021</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y22">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2022">
+                        <label class="form-check-label">2022</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y23">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2023">
+                        <label class="form-check-label">2023</label>
+                    </div>
+                `)
+            } else if (valYear2 === "2017") {
+                $("#years2").html(`
+                    <div class="form-check form-check-inline" id="y14">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2014">
+                        <label class="form-check-label">2014</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y15">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2015">
+                        <label class="form-check-label">2015</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y16">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2016">
+                        <label class="form-check-label">2016</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y18">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2018">
+                        <label class="form-check-label">2018</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y19">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2019">
+                        <label class="form-check-label">2019</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y20">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2020">
+                        <label class="form-check-label">2020</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y21">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2021">
+                        <label class="form-check-label">2021</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y22">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2022">
+                        <label class="form-check-label">2022</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y23">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2023">
+                        <label class="form-check-label">2023</label>
+                    </div>
+                `)
+            } else if (valYear2 === "2018") {
+                $("#years2").html(`
+                    <div class="form-check form-check-inline" id="y14">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2014">
+                        <label class="form-check-label">2014</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y15">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2015">
+                        <label class="form-check-label">2015</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y16">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2016">
+                        <label class="form-check-label">2016</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y17">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2017">
+                        <label class="form-check-label">2017</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y19">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2019">
+                        <label class="form-check-label">2019</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y20">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2020">
+                        <label class="form-check-label">2020</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y21">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2021">
+                        <label class="form-check-label">2021</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y22">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2022">
+                        <label class="form-check-label">2022</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y23">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2023">
+                        <label class="form-check-label">2023</label>
+                    </div>
+                `)
+            } else if (valYear2 === "2019") {
+                $("#years2").html(`
+                    <div class="form-check form-check-inline" id="y14">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2014">
+                        <label class="form-check-label">2014</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y15">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2015">
+                        <label class="form-check-label">2015</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y16">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2016">
+                        <label class="form-check-label">2016</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y17">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2017">
+                        <label class="form-check-label">2017</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y18">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2018">
+                        <label class="form-check-label">2018</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y20">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2020">
+                        <label class="form-check-label">2020</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y21">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2021">
+                        <label class="form-check-label">2021</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y22">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2022">
+                        <label class="form-check-label">2022</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y23">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2023">
+                        <label class="form-check-label">2023</label>
+                    </div>
+                `)
+            } else if (valYear2 === "2020") {
+                $("#years2").html(`
+                    <div class="form-check form-check-inline" id="y14">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2014">
+                        <label class="form-check-label">2014</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y15">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2015">
+                        <label class="form-check-label">2015</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y16">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2016">
+                        <label class="form-check-label">2016</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y17">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2017">
+                        <label class="form-check-label">2017</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y18">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2018">
+                        <label class="form-check-label">2018</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y19">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2019">
+                        <label class="form-check-label">2019</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y21">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2021">
+                        <label class="form-check-label">2021</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y22">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2022">
+                        <label class="form-check-label">2022</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y23">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2023">
+                        <label class="form-check-label">2023</label>
+                    </div>
+                `)
+            } else if (valYear2 === "2021") {
+                $("#years2").html(`
+                    <div class="form-check form-check-inline" id="y14">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2014">
+                        <label class="form-check-label">2014</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y15">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2015">
+                        <label class="form-check-label">2015</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y16">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2016">
+                        <label class="form-check-label">2016</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y17">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2017">
+                        <label class="form-check-label">2017</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y18">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2018">
+                        <label class="form-check-label">2018</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y19">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2019">
+                        <label class="form-check-label">2019</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y20">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2020">
+                        <label class="form-check-label">2020</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y22">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2022">
+                        <label class="form-check-label">2022</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y23">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2023">
+                        <label class="form-check-label">2023</label>
+                    </div>
+                `)
+            } else if (valYear2 === "2022") {
+                $("#years2").html(`
+                    <div class="form-check form-check-inline" id="y14">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2014">
+                        <label class="form-check-label">2014</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y15">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2015">
+                        <label class="form-check-label">2015</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y16">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2016">
+                        <label class="form-check-label">2016</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y17">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2017">
+                        <label class="form-check-label">2017</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y18">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2018">
+                        <label class="form-check-label">2018</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y19">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2019">
+                        <label class="form-check-label">2019</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y20">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2020">
+                        <label class="form-check-label">2020</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y21">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2021">
+                        <label class="form-check-label">2021</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y23">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2023">
+                        <label class="form-check-label">2023</label>
+                    </div>
+                `)
+            } else if (valYear2 === "2023") {
+                $("#years2").html(`
+                    <div class="form-check form-check-inline" id="y14">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2014">
+                        <label class="form-check-label">2014</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y15">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2015">
+                        <label class="form-check-label">2015</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y16">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2016">
+                        <label class="form-check-label">2016</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y17">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2017">
+                        <label class="form-check-label">2017</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y18">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2018">
+                        <label class="form-check-label">2018</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y19">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2019">
+                        <label class="form-check-label">2019</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y20">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2020">
+                        <label class="form-check-label">2020</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y21">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2021">
+                        <label class="form-check-label">2021</label>
+                    </div>
+                    <div class="form-check form-check-inline" id="y22">
+                        <input class="form-check-input" type="checkbox" name="years2" value="2022">
+                        <label class="form-check-label">2022</label>
+                    </div>
+                `)
+            }
+        })
+
+        var currentLayer;
+        var timeSliderControl;
+        var selectedValues = [];
+
+        $('#clear').click(function () {
+            $("#datas1").html(`
+            <option selected disabled class="selected" id="pre1">Select a data</option>
+            <option value="landUse">การใช้ที่ดิน</option>
+            <option value="lst">อุณหภูมิพื้นผิว</option>
+            <option value="uhi">ความเข้มข้นของเกาะความร้อน</option>
+            <option value="utfvi">ความแปรปรวนของสนามความร้อน</option>
+            `)
+
+            $("#years1").html(`
+            <option selected disabled class="selected" id="pre2">Select a year</option>
+            <option value="2014">2014</option>
+            <option value="2015">2015</option>
+            <option value="2016">2016</option>
+            <option value="2017">2017</option>
+            <option value="2018">2018</option>
+            <option value="2019">2019</option>
+            <option value="2020">2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            `)
+
+            $('input[type="checkbox"]').each(function () {
+                this.checked = false;
+            });
+            $("#addContent").remove()
+
+            if (currentLayer) {
+                map.removeLayer(currentLayer);
+                currentLayer = null;
+            }
+
+            selectedValues = [];
+
+            if (timeSliderControl) {
+                map.removeControl(timeSliderControl);
+            }
+        });
+
+        $("#confirm").on('click', function () {
+            selectedValues = [];
+
+            if (currentLayer) {
+                map.removeLayer(currentLayer);
+            }
+
+            $('#years1 option:selected').each(function () {
+                selectedValues.push($(this).val());
+            });
+
+            $('input[name="years2"]:checked').each(function () {
+                selectedValues.push($(this).val());
+            });
+
+            if (timeSliderControl) {
+                map.removeControl(timeSliderControl);
+            }
+
+            timeSliderControl = L.Control.extend({
+                onAdd: function (map) {
+                    var div = L.DomUtil.create('div', 'time-slider-control');
+                    div.innerHTML = `
+                    <label for="timeSlider">ปี (ค.ศ.)</label>
+                    <br>
+                    <div id="timeSlider"></div>
+                    <span id="timeLabel">${selectedValues[0]}</span>
+                    `;
+
+                    L.DomEvent.disableClickPropagation(div);
+                    return div;
+                }
+            });
+
+            if ($("#change").is(":checked")) {
+                if ($("#datas1").val() === "lst") {
+                    if (selectedValues.length === 2) {
+                        var lst1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true,
+                            time: selectedValues[0]
+                        });
+                        var lst2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true,
+                            time: selectedValues[1]
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(lst1)
+                        currentLayer = lst1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [lst1, lst2];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(lst1)) {
+                                        map.addLayer(lst1);
+                                    }
+                                    removeOtherLayers(lst1);
+                                    currentLayer = lst1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(lst2)) {
+                                        map.addLayer(lst2);
+                                    }
+                                    removeOtherLayers(lst2);
+                                    currentLayer = lst2;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 3) {
+                        var lst1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(lst1)
+                        currentLayer = lst1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [lst1, lst2, lst3];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(lst1)) {
+                                        map.addLayer(lst1);
+                                    }
+                                    removeOtherLayers(lst1);
+                                    currentLayer = lst1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(lst2)) {
+                                        map.addLayer(lst2);
+                                    }
+                                    removeOtherLayers(lst2);
+                                    currentLayer = lst2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(lst3)) {
+                                        map.addLayer(lst3);
+                                    }
+                                    removeOtherLayers(lst3);
+                                    currentLayer = lst3;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 4) {
+                        var lst1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(lst1)
+                        currentLayer = lst1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [lst1, lst2, lst3, lst4];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(lst1)) {
+                                        map.addLayer(lst1);
+                                    }
+                                    removeOtherLayers(lst1);
+                                    currentLayer = lst1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(lst2)) {
+                                        map.addLayer(lst2);
+                                    }
+                                    removeOtherLayers(lst2);
+                                    currentLayer = lst2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(lst3)) {
+                                        map.addLayer(lst3);
+                                    }
+                                    removeOtherLayers(lst3);
+                                    currentLayer = lst3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(lst4)) {
+                                        map.addLayer(lst4);
+                                    }
+                                    removeOtherLayers(lst4);
+                                    currentLayer = lst4;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 5) {
+                        var lst1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(lst1)
+                        currentLayer = lst1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [lst1, lst2, lst3, lst4, lst5];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(lst1)) {
+                                        map.addLayer(lst1);
+                                    }
+                                    removeOtherLayers(lst1);
+                                    currentLayer = lst1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(lst2)) {
+                                        map.addLayer(lst2);
+                                    }
+                                    removeOtherLayers(lst2);
+                                    currentLayer = lst2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(lst3)) {
+                                        map.addLayer(lst3);
+                                    }
+                                    removeOtherLayers(lst3);
+                                    currentLayer = lst3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(lst4)) {
+                                        map.addLayer(lst4);
+                                    }
+                                    removeOtherLayers(lst4);
+                                    currentLayer = lst4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(lst5)) {
+                                        map.addLayer(lst5);
+                                    }
+                                    removeOtherLayers(lst5);
+                                    currentLayer = lst5;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 6) {
+                        var lst1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(lst1)
+                        currentLayer = lst1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [lst1, lst2, lst3, lst4, lst5, lst6];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(lst1)) {
+                                        map.addLayer(lst1);
+                                    }
+                                    removeOtherLayers(lst1);
+                                    currentLayer = lst1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(lst2)) {
+                                        map.addLayer(lst2);
+                                    }
+                                    removeOtherLayers(lst2);
+                                    currentLayer = lst2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(lst3)) {
+                                        map.addLayer(lst3);
+                                    }
+                                    removeOtherLayers(lst3);
+                                    currentLayer = lst3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(lst4)) {
+                                        map.addLayer(lst4);
+                                    }
+                                    removeOtherLayers(lst4);
+                                    currentLayer = lst4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(lst5)) {
+                                        map.addLayer(lst5);
+                                    }
+                                    removeOtherLayers(lst5);
+                                    currentLayer = lst5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(lst6)) {
+                                        map.addLayer(lst6);
+                                    }
+                                    removeOtherLayers(lst6);
+                                    currentLayer = lst6;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 7) {
+                        var lst1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(lst1)
+                        currentLayer = lst1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [lst1, lst2, lst3, lst4, lst5, lst6, lst7];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(lst1)) {
+                                        map.addLayer(lst1);
+                                    }
+                                    removeOtherLayers(lst1);
+                                    currentLayer = lst1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(lst2)) {
+                                        map.addLayer(lst2);
+                                    }
+                                    removeOtherLayers(lst2);
+                                    currentLayer = lst2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(lst3)) {
+                                        map.addLayer(lst3);
+                                    }
+                                    removeOtherLayers(lst3);
+                                    currentLayer = lst3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(lst4)) {
+                                        map.addLayer(lst4);
+                                    }
+                                    removeOtherLayers(lst4);
+                                    currentLayer = lst4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(lst5)) {
+                                        map.addLayer(lst5);
+                                    }
+                                    removeOtherLayers(lst5);
+                                    currentLayer = lst5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(lst6)) {
+                                        map.addLayer(lst6);
+                                    }
+                                    removeOtherLayers(lst6);
+                                    currentLayer = lst6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(lst7)) {
+                                        map.addLayer(lst7);
+                                    }
+                                    removeOtherLayers(lst7);
+                                    currentLayer = lst7;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 8) {
+                        var lst1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst8 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[7]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(lst1)
+                        currentLayer = lst1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [lst1, lst2, lst3, lst4, lst5, lst6, lst7, lst8];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(lst1)) {
+                                        map.addLayer(lst1);
+                                    }
+                                    removeOtherLayers(lst1);
+                                    currentLayer = lst1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(lst2)) {
+                                        map.addLayer(lst2);
+                                    }
+                                    removeOtherLayers(lst2);
+                                    currentLayer = lst2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(lst3)) {
+                                        map.addLayer(lst3);
+                                    }
+                                    removeOtherLayers(lst3);
+                                    currentLayer = lst3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(lst4)) {
+                                        map.addLayer(lst4);
+                                    }
+                                    removeOtherLayers(lst4);
+                                    currentLayer = lst4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(lst5)) {
+                                        map.addLayer(lst5);
+                                    }
+                                    removeOtherLayers(lst5);
+                                    currentLayer = lst5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(lst6)) {
+                                        map.addLayer(lst6);
+                                    }
+                                    removeOtherLayers(lst6);
+                                    currentLayer = lst6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(lst7)) {
+                                        map.addLayer(lst7);
+                                    }
+                                    removeOtherLayers(lst7);
+                                    currentLayer = lst7;
+                                } else if (timeIndex === 7) {
+                                    if (!map.hasLayer(lst8)) {
+                                        map.addLayer(lst8);
+                                    }
+                                    removeOtherLayers(lst8);
+                                    currentLayer = lst8;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 9) {
+                        var lst1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst8 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[7]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst9 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[8]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(lst1)
+                        currentLayer = lst1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [lst1, lst2, lst3, lst4, lst5, lst6, lst7, lst8, lst9];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(lst1)) {
+                                        map.addLayer(lst1);
+                                    }
+                                    removeOtherLayers(lst1);
+                                    currentLayer = lst1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(lst2)) {
+                                        map.addLayer(lst2);
+                                    }
+                                    removeOtherLayers(lst2);
+                                    currentLayer = lst2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(lst3)) {
+                                        map.addLayer(lst3);
+                                    }
+                                    removeOtherLayers(lst3);
+                                    currentLayer = lst3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(lst4)) {
+                                        map.addLayer(lst4);
+                                    }
+                                    removeOtherLayers(lst4);
+                                    currentLayer = lst4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(lst5)) {
+                                        map.addLayer(lst5);
+                                    }
+                                    removeOtherLayers(lst5);
+                                    currentLayer = lst5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(lst6)) {
+                                        map.addLayer(lst6);
+                                    }
+                                    removeOtherLayers(lst6);
+                                    currentLayer = lst6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(lst7)) {
+                                        map.addLayer(lst7);
+                                    }
+                                    removeOtherLayers(lst7);
+                                    currentLayer = lst7;
+                                } else if (timeIndex === 7) {
+                                    if (!map.hasLayer(lst8)) {
+                                        map.addLayer(lst8);
+                                    }
+                                    removeOtherLayers(lst8);
+                                    currentLayer = lst8;
+                                } else if (timeIndex === 8) {
+                                    if (!map.hasLayer(lst9)) {
+                                        map.addLayer(lst9);
+                                    }
+                                    removeOtherLayers(lst9);
+                                    currentLayer = lst9;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 10) {
+                        var lst1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst8 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[7]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst9 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[8]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var lst10 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:lst${selectedValues[9]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(lst1)
+                        currentLayer = lst1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [lst1, lst2, lst3, lst4, lst5, lst6, lst7, lst8, lst9, lst10];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(lst1)) {
+                                        map.addLayer(lst1);
+                                    }
+                                    removeOtherLayers(lst1);
+                                    currentLayer = lst1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(lst2)) {
+                                        map.addLayer(lst2);
+                                    }
+                                    removeOtherLayers(lst2);
+                                    currentLayer = lst2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(lst3)) {
+                                        map.addLayer(lst3);
+                                    }
+                                    removeOtherLayers(lst3);
+                                    currentLayer = lst3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(lst4)) {
+                                        map.addLayer(lst4);
+                                    }
+                                    removeOtherLayers(lst4);
+                                    currentLayer = lst4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(lst5)) {
+                                        map.addLayer(lst5);
+                                    }
+                                    removeOtherLayers(lst5);
+                                    currentLayer = lst5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(lst6)) {
+                                        map.addLayer(lst6);
+                                    }
+                                    removeOtherLayers(lst6);
+                                    currentLayer = lst6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(lst7)) {
+                                        map.addLayer(lst7);
+                                    }
+                                    removeOtherLayers(lst7);
+                                    currentLayer = lst7;
+                                } else if (timeIndex === 7) {
+                                    if (!map.hasLayer(lst8)) {
+                                        map.addLayer(lst8);
+                                    }
+                                    removeOtherLayers(lst8);
+                                    currentLayer = lst8;
+                                } else if (timeIndex === 8) {
+                                    if (!map.hasLayer(lst9)) {
+                                        map.addLayer(lst9);
+                                    }
+                                    removeOtherLayers(lst9);
+                                    currentLayer = lst9;
+                                } else if (timeIndex === 9) {
+                                    if (!map.hasLayer(lst10)) {
+                                        map.addLayer(lst10);
+                                    }
+                                    removeOtherLayers(lst10);
+                                    currentLayer = lst10;
+                                }
+                            }
+                        });
+                    }
+                } else if ($("#datas1").val() === "uhi") {
+                    if (selectedValues.length === 2) {
+                        var uhi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(uhi1)
+                        currentLayer = uhi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [uhi1, uhi2];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(uhi1)) {
+                                        map.addLayer(uhi1);
+                                    }
+                                    removeOtherLayers(uhi1);
+                                    currentLayer = uhi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(uhi2)) {
+                                        map.addLayer(uhi2);
+                                    }
+                                    removeOtherLayers(uhi2);
+                                    currentLayer = uhi2;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 3) {
+                        var uhi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(uhi1)
+                        currentLayer = uhi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [uhi1, uhi2, uhi3];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(uhi1)) {
+                                        map.addLayer(uhi1);
+                                    }
+                                    removeOtherLayers(uhi1);
+                                    currentLayer = uhi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(uhi2)) {
+                                        map.addLayer(uhi2);
+                                    }
+                                    removeOtherLayers(uhi2);
+                                    currentLayer = uhi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(uhi3)) {
+                                        map.addLayer(uhi3);
+                                    }
+                                    removeOtherLayers(uhi3);
+                                    currentLayer = uhi3;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 4) {
+                        var uhi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(uhi1)
+                        currentLayer = uhi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [uhi1, uhi2, uhi3, uhi4];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(uhi1)) {
+                                        map.addLayer(uhi1);
+                                    }
+                                    removeOtherLayers(uhi1);
+                                    currentLayer = uhi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(uhi2)) {
+                                        map.addLayer(uhi2);
+                                    }
+                                    removeOtherLayers(uhi2);
+                                    currentLayer = uhi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(uhi3)) {
+                                        map.addLayer(uhi3);
+                                    }
+                                    removeOtherLayers(uhi3);
+                                    currentLayer = uhi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(uhi4)) {
+                                        map.addLayer(uhi4);
+                                    }
+                                    removeOtherLayers(uhi4);
+                                    currentLayer = uhi4;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 5) {
+                        var uhi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(uhi1)
+                        currentLayer = uhi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [uhi1, uhi2, uhi3, uhi4, uhi5];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(uhi1)) {
+                                        map.addLayer(uhi1);
+                                    }
+                                    removeOtherLayers(uhi1);
+                                    currentLayer = uhi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(uhi2)) {
+                                        map.addLayer(uhi2);
+                                    }
+                                    removeOtherLayers(uhi2);
+                                    currentLayer = uhi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(uhi3)) {
+                                        map.addLayer(uhi3);
+                                    }
+                                    removeOtherLayers(uhi3);
+                                    currentLayer = uhi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(uhi4)) {
+                                        map.addLayer(uhi4);
+                                    }
+                                    removeOtherLayers(uhi4);
+                                    currentLayer = uhi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(uhi5)) {
+                                        map.addLayer(uhi5);
+                                    }
+                                    removeOtherLayers(uhi5);
+                                    currentLayer = uhi5;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 6) {
+                        var uhi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(uhi1)
+                        currentLayer = uhi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [uhi1, uhi2, uhi3, uhi4, uhi5, uhi6];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(uhi1)) {
+                                        map.addLayer(uhi1);
+                                    }
+                                    removeOtherLayers(uhi1);
+                                    currentLayer = uhi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(uhi2)) {
+                                        map.addLayer(uhi2);
+                                    }
+                                    removeOtherLayers(uhi2);
+                                    currentLayer = uhi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(uhi3)) {
+                                        map.addLayer(uhi3);
+                                    }
+                                    removeOtherLayers(uhi3);
+                                    currentLayer = uhi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(uhi4)) {
+                                        map.addLayer(uhi4);
+                                    }
+                                    removeOtherLayers(uhi4);
+                                    currentLayer = uhi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(uhi5)) {
+                                        map.addLayer(uhi5);
+                                    }
+                                    removeOtherLayers(uhi5);
+                                    currentLayer = uhi5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(uhi6)) {
+                                        map.addLayer(uhi6);
+                                    }
+                                    removeOtherLayers(uhi6);
+                                    currentLayer = uhi6;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 7) {
+                        var uhi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(uhi1)
+                        currentLayer = uhi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [uhi1, uhi2, uhi3, uhi4, uhi5, uhi6, uhi7];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(uhi1)) {
+                                        map.addLayer(uhi1);
+                                    }
+                                    removeOtherLayers(uhi1);
+                                    currentLayer = uhi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(uhi2)) {
+                                        map.addLayer(uhi2);
+                                    }
+                                    removeOtherLayers(uhi2);
+                                    currentLayer = uhi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(uhi3)) {
+                                        map.addLayer(uhi3);
+                                    }
+                                    removeOtherLayers(uhi3);
+                                    currentLayer = uhi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(uhi4)) {
+                                        map.addLayer(uhi4);
+                                    }
+                                    removeOtherLayers(uhi4);
+                                    currentLayer = uhi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(uhi5)) {
+                                        map.addLayer(uhi5);
+                                    }
+                                    removeOtherLayers(uhi5);
+                                    currentLayer = uhi5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(uhi6)) {
+                                        map.addLayer(uhi6);
+                                    }
+                                    removeOtherLayers(uhi6);
+                                    currentLayer = uhi6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(uhi7)) {
+                                        map.addLayer(uhi7);
+                                    }
+                                    removeOtherLayers(uhi7);
+                                    currentLayer = uhi7;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 8) {
+                        var uhi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi8 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[7]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(uhi1)
+                        currentLayer = uhi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [uhi1, uhi2, uhi3, uhi4, uhi5, uhi6, uhi7, uhi8];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(uhi1)) {
+                                        map.addLayer(uhi1);
+                                    }
+                                    removeOtherLayers(uhi1);
+                                    currentLayer = uhi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(uhi2)) {
+                                        map.addLayer(uhi2);
+                                    }
+                                    removeOtherLayers(uhi2);
+                                    currentLayer = uhi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(uhi3)) {
+                                        map.addLayer(uhi3);
+                                    }
+                                    removeOtherLayers(uhi3);
+                                    currentLayer = uhi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(uhi4)) {
+                                        map.addLayer(uhi4);
+                                    }
+                                    removeOtherLayers(uhi4);
+                                    currentLayer = uhi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(uhi5)) {
+                                        map.addLayer(uhi5);
+                                    }
+                                    removeOtherLayers(uhi5);
+                                    currentLayer = uhi5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(uhi6)) {
+                                        map.addLayer(uhi6);
+                                    }
+                                    removeOtherLayers(uhi6);
+                                    currentLayer = uhi6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(uhi7)) {
+                                        map.addLayer(uhi7);
+                                    }
+                                    removeOtherLayers(uhi7);
+                                    currentLayer = uhi7;
+                                } else if (timeIndex === 7) {
+                                    if (!map.hasLayer(uhi8)) {
+                                        map.addLayer(uhi8);
+                                    }
+                                    removeOtherLayers(uhi8);
+                                    currentLayer = uhi8;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 9) {
+                        var uhi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi8 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[7]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi9 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[8]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(uhi1)
+                        currentLayer = uhi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [uhi1, uhi2, uhi3, uhi4, uhi5, uhi6, uhi7, uhi8, uhi9];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(uhi1)) {
+                                        map.addLayer(uhi1);
+                                    }
+                                    removeOtherLayers(uhi1);
+                                    currentLayer = uhi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(uhi2)) {
+                                        map.addLayer(uhi2);
+                                    }
+                                    removeOtherLayers(uhi2);
+                                    currentLayer = uhi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(uhi3)) {
+                                        map.addLayer(uhi3);
+                                    }
+                                    removeOtherLayers(uhi3);
+                                    currentLayer = uhi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(uhi4)) {
+                                        map.addLayer(uhi4);
+                                    }
+                                    removeOtherLayers(uhi4);
+                                    currentLayer = uhi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(uhi5)) {
+                                        map.addLayer(uhi5);
+                                    }
+                                    removeOtherLayers(uhi5);
+                                    currentLayer = uhi5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(uhi6)) {
+                                        map.addLayer(uhi6);
+                                    }
+                                    removeOtherLayers(uhi6);
+                                    currentLayer = uhi6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(uhi7)) {
+                                        map.addLayer(uhi7);
+                                    }
+                                    removeOtherLayers(uhi7);
+                                    currentLayer = uhi7;
+                                } else if (timeIndex === 7) {
+                                    if (!map.hasLayer(uhi8)) {
+                                        map.addLayer(uhi8);
+                                    }
+                                    removeOtherLayers(uhi8);
+                                    currentLayer = uhi8;
+                                } else if (timeIndex === 8) {
+                                    if (!map.hasLayer(uhi9)) {
+                                        map.addLayer(uhi9);
+                                    }
+                                    removeOtherLayers(uhi9);
+                                    currentLayer = uhi9;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 10) {
+                        var uhi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi8 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[7]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi9 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[8]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var uhi10 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:uhi${selectedValues[9]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(uhi1)
+                        currentLayer = uhi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [uhi1, uhi2, uhi3, uhi4, uhi5, uhi6, uhi7, uhi8, uhi9, uhi10];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(uhi1)) {
+                                        map.addLayer(uhi1);
+                                    }
+                                    removeOtherLayers(uhi1);
+                                    currentLayer = uhi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(uhi2)) {
+                                        map.addLayer(uhi2);
+                                    }
+                                    removeOtherLayers(uhi2);
+                                    currentLayer = uhi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(uhi3)) {
+                                        map.addLayer(uhi3);
+                                    }
+                                    removeOtherLayers(uhi3);
+                                    currentLayer = uhi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(uhi4)) {
+                                        map.addLayer(uhi4);
+                                    }
+                                    removeOtherLayers(uhi4);
+                                    currentLayer = uhi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(uhi5)) {
+                                        map.addLayer(uhi5);
+                                    }
+                                    removeOtherLayers(uhi5);
+                                    currentLayer = uhi5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(uhi6)) {
+                                        map.addLayer(uhi6);
+                                    }
+                                    removeOtherLayers(uhi6);
+                                    currentLayer = uhi6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(uhi7)) {
+                                        map.addLayer(uhi7);
+                                    }
+                                    removeOtherLayers(uhi7);
+                                    currentLayer = uhi7;
+                                } else if (timeIndex === 7) {
+                                    if (!map.hasLayer(uhi8)) {
+                                        map.addLayer(uhi8);
+                                    }
+                                    removeOtherLayers(uhi8);
+                                    currentLayer = uhi8;
+                                } else if (timeIndex === 8) {
+                                    if (!map.hasLayer(uhi9)) {
+                                        map.addLayer(uhi9);
+                                    }
+                                    removeOtherLayers(uhi9);
+                                    currentLayer = uhi9;
+                                } else if (timeIndex === 9) {
+                                    if (!map.hasLayer(uhi10)) {
+                                        map.addLayer(uhi10);
+                                    }
+                                    removeOtherLayers(uhi10);
+                                    currentLayer = uhi10;
+                                }
+                            }
+                        });
+                    }
+                } else if ($("#datas1").val() === "utfvi") {
+                    if (selectedValues.length === 2) {
+                        var utfvi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(utfvi1)
+                        currentLayer = utfvi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [utfvi1, utfvi2];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(utfvi1)) {
+                                        map.addLayer(utfvi1);
+                                    }
+                                    removeOtherLayers(utfvi1);
+                                    currentLayer = utfvi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(utfvi2)) {
+                                        map.addLayer(utfvi2);
+                                    }
+                                    removeOtherLayers(utfvi2);
+                                    currentLayer = utfvi2;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 3) {
+                        var utfvi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(utfvi1)
+                        currentLayer = utfvi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [utfvi1, utfvi2, utfvi3];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(utfvi1)) {
+                                        map.addLayer(utfvi1);
+                                    }
+                                    removeOtherLayers(utfvi1);
+                                    currentLayer = utfvi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(utfvi2)) {
+                                        map.addLayer(utfvi2);
+                                    }
+                                    removeOtherLayers(utfvi2);
+                                    currentLayer = utfvi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(utfvi3)) {
+                                        map.addLayer(utfvi3);
+                                    }
+                                    removeOtherLayers(utfvi3);
+                                    currentLayer = utfvi3;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 4) {
+                        var utfvi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(utfvi1)
+                        currentLayer = utfvi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [utfvi1, utfvi2, utfvi3, utfvi4];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(utfvi1)) {
+                                        map.addLayer(utfvi1);
+                                    }
+                                    removeOtherLayers(utfvi1);
+                                    currentLayer = utfvi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(utfvi2)) {
+                                        map.addLayer(utfvi2);
+                                    }
+                                    removeOtherLayers(utfvi2);
+                                    currentLayer = utfvi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(utfvi3)) {
+                                        map.addLayer(utfvi3);
+                                    }
+                                    removeOtherLayers(utfvi3);
+                                    currentLayer = utfvi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(utfvi4)) {
+                                        map.addLayer(utfvi4);
+                                    }
+                                    removeOtherLayers(utfvi4);
+                                    currentLayer = utfvi4;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 5) {
+                        var utfvi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(utfvi1)
+                        currentLayer = utfvi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [utfvi1, utfvi2, utfvi3, utfvi4, utfvi5];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(utfvi1)) {
+                                        map.addLayer(utfvi1);
+                                    }
+                                    removeOtherLayers(utfvi1);
+                                    currentLayer = utfvi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(utfvi2)) {
+                                        map.addLayer(utfvi2);
+                                    }
+                                    removeOtherLayers(utfvi2);
+                                    currentLayer = utfvi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(utfvi3)) {
+                                        map.addLayer(utfvi3);
+                                    }
+                                    removeOtherLayers(utfvi3);
+                                    currentLayer = utfvi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(utfvi4)) {
+                                        map.addLayer(utfvi4);
+                                    }
+                                    removeOtherLayers(utfvi4);
+                                    currentLayer = utfvi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(utfvi5)) {
+                                        map.addLayer(utfvi5);
+                                    }
+                                    removeOtherLayers(utfvi5);
+                                    currentLayer = utfvi5;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 6) {
+                        var utfvi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(utfvi1)
+                        currentLayer = utfvi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [utfvi1, utfvi2, utfvi3, utfvi4, utfvi5, utfvi6];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(utfvi1)) {
+                                        map.addLayer(utfvi1);
+                                    }
+                                    removeOtherLayers(utfvi1);
+                                    currentLayer = utfvi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(utfvi2)) {
+                                        map.addLayer(utfvi2);
+                                    }
+                                    removeOtherLayers(utfvi2);
+                                    currentLayer = utfvi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(utfvi3)) {
+                                        map.addLayer(utfvi3);
+                                    }
+                                    removeOtherLayers(utfvi3);
+                                    currentLayer = utfvi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(utfvi4)) {
+                                        map.addLayer(utfvi4);
+                                    }
+                                    removeOtherLayers(utfvi4);
+                                    currentLayer = utfvi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(utfvi5)) {
+                                        map.addLayer(utfvi5);
+                                    }
+                                    removeOtherLayers(utfvi5);
+                                    currentLayer = utfvi5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(utfvi6)) {
+                                        map.addLayer(utfvi6);
+                                    }
+                                    removeOtherLayers(utfvi6);
+                                    currentLayer = utfvi6;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 7) {
+                        var utfvi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(utfvi1)
+                        currentLayer = utfvi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [utfvi1, utfvi2, utfvi3, utfvi4, utfvi5, utfvi6, utfvi7];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(utfvi1)) {
+                                        map.addLayer(utfvi1);
+                                    }
+                                    removeOtherLayers(utfvi1);
+                                    currentLayer = utfvi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(utfvi2)) {
+                                        map.addLayer(utfvi2);
+                                    }
+                                    removeOtherLayers(utfvi2);
+                                    currentLayer = utfvi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(utfvi3)) {
+                                        map.addLayer(utfvi3);
+                                    }
+                                    removeOtherLayers(utfvi3);
+                                    currentLayer = utfvi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(utfvi4)) {
+                                        map.addLayer(utfvi4);
+                                    }
+                                    removeOtherLayers(utfvi4);
+                                    currentLayer = utfvi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(utfvi5)) {
+                                        map.addLayer(utfvi5);
+                                    }
+                                    removeOtherLayers(utfvi5);
+                                    currentLayer = utfvi5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(utfvi6)) {
+                                        map.addLayer(utfvi6);
+                                    }
+                                    removeOtherLayers(utfvi6);
+                                    currentLayer = utfvi6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(utfvi7)) {
+                                        map.addLayer(utfvi7);
+                                    }
+                                    removeOtherLayers(utfvi7);
+                                    currentLayer = utfvi7;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 8) {
+                        var utfvi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi8 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[7]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(utfvi1)
+                        currentLayer = utfvi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [utfvi1, utfvi2, utfvi3, utfvi4, utfvi5, utfvi6, utfvi7, utfvi8];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(utfvi1)) {
+                                        map.addLayer(utfvi1);
+                                    }
+                                    removeOtherLayers(utfvi1);
+                                    currentLayer = utfvi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(utfvi2)) {
+                                        map.addLayer(utfvi2);
+                                    }
+                                    removeOtherLayers(utfvi2);
+                                    currentLayer = utfvi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(utfvi3)) {
+                                        map.addLayer(utfvi3);
+                                    }
+                                    removeOtherLayers(utfvi3);
+                                    currentLayer = utfvi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(utfvi4)) {
+                                        map.addLayer(utfvi4);
+                                    }
+                                    removeOtherLayers(utfvi4);
+                                    currentLayer = utfvi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(utfvi5)) {
+                                        map.addLayer(utfvi5);
+                                    }
+                                    removeOtherLayers(utfvi5);
+                                    currentLayer = utfvi5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(utfvi6)) {
+                                        map.addLayer(utfvi6);
+                                    }
+                                    removeOtherLayers(utfvi6);
+                                    currentLayer = utfvi6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(utfvi7)) {
+                                        map.addLayer(utfvi7);
+                                    }
+                                    removeOtherLayers(utfvi7);
+                                    currentLayer = utfvi7;
+                                } else if (timeIndex === 7) {
+                                    if (!map.hasLayer(utfvi8)) {
+                                        map.addLayer(utfvi8);
+                                    }
+                                    removeOtherLayers(utfvi8);
+                                    currentLayer = utfvi8;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 9) {
+                        var utfvi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi8 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[7]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi9 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[8]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(utfvi1)
+                        currentLayer = utfvi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [utfvi1, utfvi2, utfvi3, utfvi4, utfvi5, utfvi6, utfvi7, utfvi8, utfvi9];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(utfvi1)) {
+                                        map.addLayer(utfvi1);
+                                    }
+                                    removeOtherLayers(utfvi1);
+                                    currentLayer = utfvi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(utfvi2)) {
+                                        map.addLayer(utfvi2);
+                                    }
+                                    removeOtherLayers(utfvi2);
+                                    currentLayer = utfvi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(utfvi3)) {
+                                        map.addLayer(utfvi3);
+                                    }
+                                    removeOtherLayers(utfvi3);
+                                    currentLayer = utfvi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(utfvi4)) {
+                                        map.addLayer(utfvi4);
+                                    }
+                                    removeOtherLayers(utfvi4);
+                                    currentLayer = utfvi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(utfvi5)) {
+                                        map.addLayer(utfvi5);
+                                    }
+                                    removeOtherLayers(utfvi5);
+                                    currentLayer = utfvi5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(utfvi6)) {
+                                        map.addLayer(utfvi6);
+                                    }
+                                    removeOtherLayers(utfvi6);
+                                    currentLayer = utfvi6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(utfvi7)) {
+                                        map.addLayer(utfvi7);
+                                    }
+                                    removeOtherLayers(utfvi7);
+                                    currentLayer = utfvi7;
+                                } else if (timeIndex === 7) {
+                                    if (!map.hasLayer(utfvi8)) {
+                                        map.addLayer(utfvi8);
+                                    }
+                                    removeOtherLayers(utfvi8);
+                                    currentLayer = utfvi8;
+                                } else if (timeIndex === 8) {
+                                    if (!map.hasLayer(utfvi9)) {
+                                        map.addLayer(utfvi9);
+                                    }
+                                    removeOtherLayers(utfvi9);
+                                    currentLayer = utfvi9;
+                                }
+                            }
+                        });
+                    } else if (selectedValues.length === 10) {
+                        var utfvi1 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[0]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi2 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[1]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi3 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[2]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi4 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[3]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi5 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[4]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi6 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[5]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi7 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[6]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi8 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[7]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi9 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[8]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        var utfvi10 = L.tileLayer.wms(wmsUrl, {
+                            layers: `finalProject:utfvi${selectedValues[9]}`,
+                            format: 'image/png',
+                            transparent: true
+                        });
+
+                        timeSliderControl = new timeSliderControl({ position: 'topright' });
+                        map.addControl(timeSliderControl);
+                        map.addLayer(utfvi1)
+                        currentLayer = utfvi1;
+
+                        $("#timeSlider").slider({
+                            orientation: "vertical",
+                            min: 0,
+                            max: selectedValues.length - 1,
+                            value: 0,
+                            step: 1,
+                            slide: function (event, ui) {
+                                var timeIndex = ui.value;
+                                var selectedTime = selectedValues[timeIndex];
+
+                                $("#timeLabel").text(selectedTime.split("T")[0]);
+
+                                function removeOtherLayers(exceptLayer) {
+                                    var layers = [utfvi1, utfvi2, utfvi3, utfvi4, utfvi5, utfvi6, utfvi7, utfvi8, utfvi9, utfvi10];
+                                    layers.forEach(function (layer) {
+                                        if (layer !== exceptLayer && map.hasLayer(layer)) {
+                                            map.removeLayer(layer);
+                                        }
+                                    });
+                                }
+
+                                if (timeIndex === 0) {
+                                    if (!map.hasLayer(utfvi1)) {
+                                        map.addLayer(utfvi1);
+                                    }
+                                    removeOtherLayers(utfvi1);
+                                    currentLayer = utfvi1;
+                                } else if (timeIndex === 1) {
+                                    if (!map.hasLayer(utfvi2)) {
+                                        map.addLayer(utfvi2);
+                                    }
+                                    removeOtherLayers(utfvi2);
+                                    currentLayer = utfvi2;
+                                } else if (timeIndex === 2) {
+                                    if (!map.hasLayer(utfvi3)) {
+                                        map.addLayer(utfvi3);
+                                    }
+                                    removeOtherLayers(utfvi3);
+                                    currentLayer = utfvi3;
+                                } else if (timeIndex === 3) {
+                                    if (!map.hasLayer(utfvi4)) {
+                                        map.addLayer(utfvi4);
+                                    }
+                                    removeOtherLayers(utfvi4);
+                                    currentLayer = utfvi4;
+                                } else if (timeIndex === 4) {
+                                    if (!map.hasLayer(utfvi5)) {
+                                        map.addLayer(utfvi5);
+                                    }
+                                    removeOtherLayers(utfvi5);
+                                    currentLayer = utfvi5;
+                                } else if (timeIndex === 5) {
+                                    if (!map.hasLayer(utfvi6)) {
+                                        map.addLayer(utfvi6);
+                                    }
+                                    removeOtherLayers(utfvi6);
+                                    currentLayer = utfvi6;
+                                } else if (timeIndex === 6) {
+                                    if (!map.hasLayer(utfvi7)) {
+                                        map.addLayer(utfvi7);
+                                    }
+                                    removeOtherLayers(utfvi7);
+                                    currentLayer = utfvi7;
+                                } else if (timeIndex === 7) {
+                                    if (!map.hasLayer(utfvi8)) {
+                                        map.addLayer(utfvi8);
+                                    }
+                                    removeOtherLayers(utfvi8);
+                                    currentLayer = utfvi8;
+                                } else if (timeIndex === 8) {
+                                    if (!map.hasLayer(utfvi9)) {
+                                        map.addLayer(utfvi9);
+                                    }
+                                    removeOtherLayers(utfvi9);
+                                    currentLayer = utfvi9;
+                                } else if (timeIndex === 9) {
+                                    if (!map.hasLayer(utfvi10)) {
+                                        map.addLayer(utfvi10);
+                                    }
+                                    removeOtherLayers(utfvi10);
+                                    currentLayer = utfvi10;
+                                }
+                            }
+                        });
+                    }
+                }
+            } else {
+                if ($("#datas1").val() === "lst") {
+                    if ($("#years1").val() === "2014") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:lst2014',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2015") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:lst2015',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2016") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:lst2016',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2017") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:lst2017',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2018") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:lst2018',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2019") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:lst2019',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2020") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:lst2020',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2021") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:lst2021',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2022") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:lst2022',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2023") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:lst2023',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    }
+                } else if ($("#datas1").val() === "uhi") {
+                    if ($("#years1").val() === "2014") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:uhi2014',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2015") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:uhi2015',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2016") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:uhi2016',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2017") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:uhi2017',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2018") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:uhi2018',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2019") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:uhi2019',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2020") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:uhi2020',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2021") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:uhi2021',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2022") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:uhi2022',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2023") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:uhi2023',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    }
+                } else if ($("#datas1").val() === "utfvi") {
+                    if ($("#years1").val() === "2014") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:utfvi2014',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2015") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:utfvi2015',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2016") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:utfvi2016',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2017") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:utfvi2017',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2018") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:utfvi2018',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2019") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:utfvi2019',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2020") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:utfvi2020',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2021") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:utfvi2021',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2022") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:utfvi2022',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    } else if ($('#years1').val() === "2023") {
+                        currentLayer = L.tileLayer.wms(wmsUrl, {
+                            layers: 'finalProject:utfvi2023',
+                            format: 'image/png',
+                            transparent: true
+                        });
+                        currentLayer.addTo(map);
+                    }
+                }
+            }
+        })
+
+    </script>
+
+</body>
+
+</html>
